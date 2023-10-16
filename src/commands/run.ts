@@ -120,18 +120,20 @@ export default async function (programFQN: Name, { project, assets, skipValidati
     socket.emit('sizeCanvasInic', [sizeCanvas.width, sizeCanvas.height])
 
     const id = setInterval(() => {
-      const game = interp?.object('wollok.game.game')
+      const game = interp.object('wollok.game.game')
       socket.emit('cellPixelSize', game.get('cellSize')!.innerNumber!)
       try {
         interp.send('flushEvents', game, interp.reify(timmer))
         timmer += 300
-        if (!game.get('running')) { clearInterval(id) }
+        if (!game.get('running')) {
+          clearInterval(id)
+        }
       } catch (e: any) {
         interp.send('stop', game)
         socket.emit('errorDetected', e.message)
         clearInterval(id)
       }
-    }, 100)
+    }, 16)
   })
   server.listen(3000)
 }
