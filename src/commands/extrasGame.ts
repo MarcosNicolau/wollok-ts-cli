@@ -17,7 +17,8 @@ export function canvasResolution(interpreter: Interpreter): CanvasResolution {
 export interface VisualState {
   image?: string
   position: Position
-  message?: string
+  text?: string
+  textColor?: string
 }
 export interface Position {
   x: number
@@ -46,8 +47,9 @@ export function visualState(
   const roundedPosition = interpreter.send('round', position)!
   const x = roundedPosition.get('x')!.innerNumber!
   const y = roundedPosition.get('y')!.innerNumber!
-  const message = visual.get('message')?.innerString
-  return { image, position: { x, y }, message }
+  const text = invokeMethod(interpreter, visual, 'text')
+  const textColor = invokeMethod(interpreter, visual, 'textColor')
+  return { image, position: { x, y }, text, textColor }
 }
 export function queueEvent(
   interpreter: Interpreter,

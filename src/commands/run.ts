@@ -224,14 +224,8 @@ function getImages() {
 function getVisuals(game: RuntimeObject) {
   const visuals: VisualState[] = []
   for (const visual of game.get('visuals')?.innerCollection ?? []) {
-    const { image, position, message } = visualState(interp, visual)
-    const messageTime = Number(visual.get('messageTime')?.innerValue)
-
-    if (message != undefined && messageTime > timmer) {
-      visuals.push({ image: image, position: position, message: message })
-    } else {
-      visuals.push({ image: image, position: position, message: undefined })
-    }
+    const state = visualState(interp, visual)
+    visuals.push(state)
   }
   return visuals
 }

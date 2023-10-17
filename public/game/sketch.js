@@ -90,13 +90,12 @@ function drawVisuals() {
       var img = images.find((img) => img.name == visuals[i].image)
       var positionY = img ? y - img.url.height : y - wko.height
       if (img) image(img.url, positionX, positionY)
-      else {
+      else if (!visuals[i].text) {
         image(wko, positionX, positionY)
         drawNotFound('Image\n not \nfound', positionX, positionY)
       }
-      if (visuals[i].message) {
-        drawMessage(visuals[i].message, positionX, positionY)
-      }
+      if (visuals[i].text)
+        drawText(visuals[i].text, visuals[i].textColor, positionX, positionY)
     }
   }
 }
@@ -115,16 +114,16 @@ function keyPressed() {
   socket.emit('keyPressed', { key: key, keyCode: keyCode })
 }
 
-function drawMessage(message, positionX, positionY) {
+function drawText(message, color, positionX, positionY) {
   const TEXT_STYLE = 'bold'
   const TEXT_SIZE = 14
   var messagePosition = { x: positionX, y: positionY + 1 }
-  drawMessageBackground(message, messagePosition)
+  // drawMessageBackground(message, messagePosition)
   const position = messageTextPosition(messagePosition)
   const limit = { x: sizeFactor * 3, y: sizeFactor * 3 }
   textSize(TEXT_SIZE)
   textStyle(TEXT_STYLE)
-  fill('black')
+  fill(color || 'blue')
   textAlign('left')
   noStroke()
   text(message, position.x, position.y, limit.x, limit.y)
