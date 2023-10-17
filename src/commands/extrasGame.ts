@@ -4,8 +4,8 @@ import { Interpreter } from 'wollok-ts/dist/interpreter/interpreter'
 const { round } = Math
 
 export interface CanvasResolution {
-  width: number;
-  height: number;
+  width: number
+  height: number
 }
 export function canvasResolution(interpreter: Interpreter): CanvasResolution {
   const game = interpreter.object('wollok.game.game')
@@ -15,23 +15,32 @@ export function canvasResolution(interpreter: Interpreter): CanvasResolution {
   return { width, height }
 }
 export interface VisualState {
-  image?: string;
-  position: Position;
-  message?: string;
+  image?: string
+  position: Position
+  message?: string
 }
 export interface Position {
-  x: number;
-  y: number;
+  x: number
+  y: number
 }
 export interface Image {
-  name: string;
-  url: string;
+  name: string
+  url: string
 }
-function invokeMethod(interpreter: Interpreter, visual: RuntimeObject, method: string) {
+function invokeMethod(
+  interpreter: Interpreter,
+  visual: RuntimeObject,
+  method: string,
+) {
   const lookedUpMethod = visual.module.lookupMethod(method, 0)
-  return lookedUpMethod && interpreter.invoke(lookedUpMethod, visual)!.innerString
+  return (
+    lookedUpMethod && interpreter.invoke(lookedUpMethod, visual)!.innerString
+  )
 }
-export function visualState(interpreter: Interpreter, visual: RuntimeObject): VisualState {
+export function visualState(
+  interpreter: Interpreter,
+  visual: RuntimeObject,
+): VisualState {
   const image = invokeMethod(interpreter, visual, 'image')
   const position = interpreter.send('position', visual)!
   const roundedPosition = interpreter.send('round', position)!
@@ -40,19 +49,26 @@ export function visualState(interpreter: Interpreter, visual: RuntimeObject): Vi
   const message = visual.get('message')?.innerString
   return { image, position: { x, y }, message }
 }
-export function queueEvent(interpreter: Interpreter, ...events: RuntimeObject[]): void {
+export function queueEvent(
+  interpreter: Interpreter,
+  ...events: RuntimeObject[]
+): void {
   const io = interpreter.object('wollok.lang.io')
-  events.forEach(e => interpreter.send('queueEvent', io, e))
+  events.forEach((e) => interpreter.send('queueEvent', io, e))
 }
 
-export function buildKeyPressEvent(interpreter: Interpreter, keyCode: string): RuntimeObject {
+export function buildKeyPressEvent(
+  interpreter: Interpreter,
+  keyCode: string,
+): RuntimeObject {
   return interpreter.list(
     interpreter.reify('keypress'),
-    interpreter.reify(keyCode)
+    interpreter.reify(keyCode),
   )
 }
 
-export function wKeyCode(keyName: string, keyCode: number): string { //These keyCodes correspond to http://keycode.info/
+export function wKeyCode(keyName: string, keyCode: number): string {
+  //These keyCodes correspond to http://keycode.info/
   if (keyCode >= 48 && keyCode <= 57) return `Digit${keyName}` //Numbers (non numpad)
   if (keyCode >= 65 && keyCode <= 90) return `Key${keyName.toUpperCase()}` //Letters
   if (keyCode === 18) return 'AltLeft'

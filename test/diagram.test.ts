@@ -9,7 +9,6 @@ import { Variable } from 'wollok-ts'
 use(diagramAssertions)
 should()
 
-
 const projectPath = join('examples', 'diagram-examples')
 const simpleFile = join(projectPath, 'fish.wlk')
 const fileWithImports = join(projectPath, 'using-imports', 'base.wlk')
@@ -23,19 +22,22 @@ describe('Dynamic diagram', () => {
   }
   let interpreter: Interpreter
 
-
   beforeEach(async () => {
     interpreter = await initializeInterpreter(simpleFile, options)
   })
 
   it('should include WKOs', () => {
-    getDataDiagram(interpreter).should
-      .include.nodeWith({ type: 'object', label: 'george' }).and.to
-      .include.nodeWith({ type: 'object', label: 'bobbyTheShark' })
+    getDataDiagram(interpreter)
+      .should.include.nodeWith({ type: 'object', label: 'george' })
+      .and.to.include.nodeWith({ type: 'object', label: 'bobbyTheShark' })
   })
 
   it('should include edges between WKOs', () => {
-    getDataDiagram(interpreter).should.connect('friend', 'bobbyTheShark', 'george')
+    getDataDiagram(interpreter).should.connect(
+      'friend',
+      'bobbyTheShark',
+      'george',
+    )
   })
 
   it('should include edges between WKOs and custom classes', () => {
@@ -43,7 +45,8 @@ describe('Dynamic diagram', () => {
   })
 
   it('should include edges between WKOs and literal attributes', () => {
-    getDataDiagram(interpreter).should.connect('age', 'bobbyTheShark', '5')
+    getDataDiagram(interpreter)
+      .should.connect('age', 'bobbyTheShark', '5')
       .and.to.connect('name', 'bobbyTheShark', '"Bobby"')
       .and.to.connect('born', 'bobbyTheShark', '2/14/1971')
       .and.to.connect('isHappy', 'bobbyTheShark', 'true')
@@ -55,7 +58,11 @@ describe('Dynamic diagram', () => {
   })
 
   it('should include edges with extra info for constants', () => {
-    getDataDiagram(interpreter).should.connect('fixedValue🔒', 'bobbyTheShark', '"Fixed"')
+    getDataDiagram(interpreter).should.connect(
+      'fixedValue🔒',
+      'bobbyTheShark',
+      '"Fixed"',
+    )
   })
 
   it('should include edges between classes and literal attributes', () => {
@@ -63,13 +70,17 @@ describe('Dynamic diagram', () => {
   })
 
   it('should resolve circular references successfully', () => {
-    getDataDiagram(interpreter).should.connect('friend', 'Bird', 'bobbyTheShark')
+    getDataDiagram(interpreter)
+      .should.connect('friend', 'Bird', 'bobbyTheShark')
       .and.to.connect('bird', 'bobbyTheShark', 'Bird')
   })
 
   it('should include the REPL object', () => {
     interpreter.exec(new Variable({ isConstant: false, name: 'x' }))
-    getDataDiagram(interpreter).should.include.nodeWith({ label: 'REPL', type: 'REPL' })
+    getDataDiagram(interpreter).should.include.nodeWith({
+      label: 'REPL',
+      type: 'REPL',
+    })
   })
 
   it('should include edges between REPL and WKOs', () => {
@@ -79,40 +90,42 @@ describe('Dynamic diagram', () => {
 
   it('should have a specific type for null object', () => {
     interpreter.exec(new Variable({ isConstant: false, name: 'x' }))
-    getDataDiagram(interpreter).should.include.nodeWith({ label: 'null', type: 'null' })
+    getDataDiagram(interpreter).should.include.nodeWith({
+      label: 'null',
+      type: 'null',
+    })
   })
 
   it('should include lists and their elements', () => {
-    getDataDiagram(interpreter).should
-      .include.nodeWith({ type: 'literal', label: 'List' }).and.to
-      .include.nodeWith({ type: 'literal', label: '"blue"' }).and.to
-      .include.nodeWith({ type: 'literal', label: '"orange"' }).and.to
-      .include.nodeWith({ type: 'literal', label: '"grey"' }).and.to
-      .connect('0', 'List', '"blue"').and.to
-      .connect('1', 'List', '"orange"').and.to
-      .connect('2', 'List', '"grey"')
+    getDataDiagram(interpreter)
+      .should.include.nodeWith({ type: 'literal', label: 'List' })
+      .and.to.include.nodeWith({ type: 'literal', label: '"blue"' })
+      .and.to.include.nodeWith({ type: 'literal', label: '"orange"' })
+      .and.to.include.nodeWith({ type: 'literal', label: '"grey"' })
+      .and.to.connect('0', 'List', '"blue"')
+      .and.to.connect('1', 'List', '"orange"')
+      .and.to.connect('2', 'List', '"grey"')
   })
 
   it('should include sets and their elements', () => {
-    getDataDiagram(interpreter).should
-      .include.nodeWith({ type: 'literal', label: 'Set' }).and.to
-      .include.nodeWith({ type: 'literal', label: '"blue"' }).and.to
-      .include.nodeWith({ type: 'literal', label: '"orange"' }).and.to
-      .include.nodeWith({ type: 'literal', label: '"grey"' }).and.to
-      .connect('', 'Set', '"blue"').and.to
-      .connect('', 'Set', '"orange"').and.to
-      .connect('', 'Set', '"grey"')
+    getDataDiagram(interpreter)
+      .should.include.nodeWith({ type: 'literal', label: 'Set' })
+      .and.to.include.nodeWith({ type: 'literal', label: '"blue"' })
+      .and.to.include.nodeWith({ type: 'literal', label: '"orange"' })
+      .and.to.include.nodeWith({ type: 'literal', label: '"grey"' })
+      .and.to.connect('', 'Set', '"blue"')
+      .and.to.connect('', 'Set', '"orange"')
+      .and.to.connect('', 'Set', '"grey"')
   })
-
 
   it('should only include imported WKOs', async () => {
     interpreter = await initializeInterpreter(fileWithImports, options)
     const dataDiagram = getDataDiagram(interpreter)
-    dataDiagram.should
-      .include.nodeWith({ type: 'object', label: 'a' }).and.to
-      .include.nodeWith({ type: 'object', label: 'b' }).and.to
-      .include.nodeWith({ type: 'object', label: 'c' }).and.to
-      .include.nodeWith({ type: 'object', label: 'd' })
-    dataDiagram.filter(_ => _.data.type == 'object' ).should.have.length(4)
+    dataDiagram.should.include
+      .nodeWith({ type: 'object', label: 'a' })
+      .and.to.include.nodeWith({ type: 'object', label: 'b' })
+      .and.to.include.nodeWith({ type: 'object', label: 'c' })
+      .and.to.include.nodeWith({ type: 'object', label: 'd' })
+    dataDiagram.filter((_) => _.data.type == 'object').should.have.length(4)
   })
 })

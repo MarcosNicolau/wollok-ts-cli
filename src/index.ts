@@ -9,13 +9,16 @@ const program = new Command()
   .name('wollok')
   .description('Wollok Language command line interpreter tool')
   .version(process.env.npm_package_version ?? 'unkown')
-  .hook('preAction', (thisCommand, actionCommand) =>  {
-    actionCommand.opts().verbose ? logger.setLevel('DEBUG') : logger.setLevel('INFO')
+  .hook('preAction', (thisCommand, actionCommand) => {
+    actionCommand.opts().verbose
+      ? logger.setLevel('DEBUG')
+      : logger.setLevel('INFO')
   })
 
-program.command('run')
+program
+  .command('run')
   .description('Run a Wollok program')
-  .argument('<program>', 'program\'s fully qualified name')
+  .argument('<program>', "program's fully qualified name")
   .option('-p, --project <path>', 'path to project', process.cwd())
   .option('-a, --assets <path>', 'Path relative to project for game assets')
   .option('--skipValidations', 'skip code validation', false)
@@ -23,7 +26,8 @@ program.command('run')
   .option('-v, --verbose', 'print debugging information', false)
   .action(run)
 
-program.command('test')
+program
+  .command('test')
   .description('Run Wollok tests')
   .argument('[filter]', 'filter pattern for a test, describe or package')
   .option('-p, --project [filter]', 'path to project', process.cwd())
@@ -31,7 +35,8 @@ program.command('test')
   .option('-v, --verbose', 'print debugging information', false)
   .action(test)
 
-program.command('repl')
+program
+  .command('repl')
   .description('Start Wollok interactive console')
   .argument('[file]', 'main Wollok file to auto import')
   .option('-p, --project [filter]', 'path to project', process.cwd())
@@ -41,8 +46,8 @@ program.command('repl')
   .option('-v, --verbose', 'print debugging information', false)
   .action(repl)
 
-
-program.command('init')
+program
+  .command('init')
   .description('Create a new Wollok project')
   .option('-p, --project [filter]', 'path to project', process.cwd())
   .action(init)

@@ -7,14 +7,14 @@
 /* inter-regular - latin */
 @font-face {
   font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-  font-family: "Inter";
+  font-family: 'Inter';
   font-style: normal;
   font-weight: 400;
   src: url('./fonts/inter-v12-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 
 * {
-  font-family: "Inter", "Arial", sans-serif;
+  font-family: 'Inter', 'Arial', sans-serif;
   font-size: 10px;
   box-sizing: border-box;
   padding: 0;
@@ -92,7 +92,7 @@
 
 /* Making a dot switch inside the Toggle Button */
 .toggle::before {
-  content: "";
+  content: '';
   width: 25px;
   height: 25px;
   border-radius: 50%;

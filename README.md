@@ -15,14 +15,13 @@ This is the list of the currently available commands:
 
 ## Contributing
 
-All contributions are welcome! Feel free to report issues on [the project's issue tracker](https://github.com/uqbar-project/wollok-ts-cli/issues), or fork the project and [create a *Pull Request*](https://help.github.com/articles/creating-a-pull-request-from-a-fork/). If you've never collaborated with an open source project before, you might want to read [this guide](https://akrabat.com/the-beginners-guide-to-contributing-to-a-github-project/).
+All contributions are welcome! Feel free to report issues on [the project's issue tracker](https://github.com/uqbar-project/wollok-ts-cli/issues), or fork the project and [create a _Pull Request_](https://help.github.com/articles/creating-a-pull-request-from-a-fork/). If you've never collaborated with an open source project before, you might want to read [this guide](https://akrabat.com/the-beginners-guide-to-contributing-to-a-github-project/).
 
 If you plan to contribute with code, here are some hints to help you start:
 
-
 ### Working Environment
 
-Before anything else, you will need a *TypeScript* editor. We recomend [Visual Studio Code](https://code.visualstudio.com/) along with the following plugins:
+Before anything else, you will need a _TypeScript_ editor. We recomend [Visual Studio Code](https://code.visualstudio.com/) along with the following plugins:
 
 - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
 - [TypeScript Importer](https://marketplace.visualstudio.com/items?itemName=pmneo.tsimporter)
@@ -65,20 +64,20 @@ nvm use <<version number>>
 
 #### For all
 
-In the previous step, `nvm use` also installs [NPM](https://www.npmjs.com/). If you are not familiar with *dependency manager tools*, you can think of this program as the entry point for all the important tasks development-related tasks, like installing dependencies and running tests.
-
+In the previous step, `nvm use` also installs [NPM](https://www.npmjs.com/). If you are not familiar with _dependency manager tools_, you can think of this program as the entry point for all the important tasks development-related tasks, like installing dependencies and running tests.
 
 Expected output is the node version that will be used:
+
 ```bash
 node -v
 ```
+
 So now you need to use npm to install dependencies:
 
 ```bash
 # This will install all the project dependencies. Give it some time.
 npm install
 ```
-
 
 ### Running and testing
 

@@ -4,10 +4,15 @@ import { readFile } from 'fs/promises'
 import globby from 'globby'
 import logger from 'loglevel'
 import path, { join } from 'path'
-import { Environment, Problem, RuntimeObject, WOLLOK_EXTRA_STACK_TRACE_HEADER, buildEnvironment } from 'wollok-ts'
+import {
+  Environment,
+  Problem,
+  RuntimeObject,
+  WOLLOK_EXTRA_STACK_TRACE_HEADER,
+  buildEnvironment,
+} from 'wollok-ts'
 
 const { time, timeEnd } = console
-
 
 // ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 // FILE / PATH HANDLING
@@ -21,27 +26,38 @@ export function getFQN(project: string, filePath: string): string {
 }
 
 export type FileContent = {
-  name: string,
-  content: string,
+  name: string
+  content: string
 }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 // ENVIRONMENT CREATION
 // ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-export async function buildEnvironmentForProject(project: string, files: string[] = []): Promise<Environment> {
+export async function buildEnvironmentForProject(
+  project: string,
+  files: string[] = [],
+): Promise<Environment> {
   const debug = logger.getLevel() <= logger.levels.DEBUG
 
-  const paths = files.length ? files : await globby('**/*.@(wlk|wtest|wpgm)', { cwd: project })
+  const paths = files.length
+    ? files
+    : await globby('**/*.@(wlk|wtest|wpgm)', { cwd: project })
 
-  if(debug) time('Reading project files')
-  const environmentFiles = await Promise.all(paths.map(async name =>
-    ({ name, content: await readFile(join(project, name), 'utf8') })
-  ))
+  if (debug) time('Reading project files')
+  const environmentFiles = await Promise.all(
+    paths.map(async (name) => ({
+      name,
+      content: await readFile(join(project, name), 'utf8'),
+    })),
+  )
   if (debug) timeEnd('Reading project files')
 
-  if(debug) time('Building environment')
-  try { return buildEnvironment(environmentFiles) }
-  finally { if(debug) timeEnd('Building environment' ) }
+  if (debug) time('Building environment')
+  try {
+    return buildEnvironment(environmentFiles)
+  } finally {
+    if (debug) timeEnd('Building environment')
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -61,7 +77,8 @@ export const failureDescription = (description: string, e?: Error): string => {
     .replaceAll('\t', '  ')
     .replaceAll('     ', '  ')
     .replaceAll('    ', '  ')
-    .split('\n').join('\n  ')
+    .split('\n')
+    .join('\n  ')
 
   return red(`${bold('✗')} ${description}${stack ? '\n  ' + stack : ''}`)
 }
@@ -69,7 +86,9 @@ export const failureDescription = (description: string, e?: Error): string => {
 export const problemDescription = (problem: Problem): string => {
   const color = problem.level === 'warning' ? yellowBright : red
   const header = bold(`[${problem.level.toUpperCase()}]`)
-  return color(`${header}: ${problem.code} at ${problem.node?.sourceInfo ?? 'unknown'}`)
+  return color(
+    `${header}: ${problem.code} at ${problem.node?.sourceInfo ?? 'unknown'}`,
+  )
 }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -87,13 +106,15 @@ export const readPackageProperties = (pathProject: string): any | undefined => {
 }
 
 const imageExtensions = ['png', 'jpg']
-export const isImageFile = (file: Dirent): boolean => imageExtensions.some(ext => file.name.endsWith(ext))
+export const isImageFile = (file: Dirent): boolean =>
+  imageExtensions.some((ext) => file.name.endsWith(ext))
 
 // ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 // WOLLOK AST
 // ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-
 export function isConstant(obj: RuntimeObject, localName: string): boolean {
-  return !!obj.module.allFields.find((field: { name: string }) => field.name === localName)?.isConstant
+  return !!obj.module.allFields.find(
+    (field: { name: string }) => field.name === localName,
+  )?.isConstant
 }

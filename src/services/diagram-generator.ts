@@ -14,10 +14,7 @@ const SELF = 'self'
 
 function getImportedDefinitionsFromConsole(interpreter: Interpreter): Entity[] {
   const replPackage = replNode(interpreter.evaluation.environment)
-  return [
-    ...replPackage.members,
-    ...replPackage.imports.flatMap(resolveImport),
-  ]
+  return [...replPackage.members, ...replPackage.imports.flatMap(resolveImport)]
 }
 
 function resolveImport(imp: Import): Entity[] {
@@ -30,30 +27,45 @@ function resolveImport(imp: Import): Entity[] {
 export function getDataDiagram(interpreter: Interpreter): ElementDefinition[] {
   const importedFromConsole = getImportedDefinitionsFromConsole(interpreter)
   const currentFrame = interpreter.evaluation.currentFrame
-  const objects = new Map(Array.from(currentFrame.locals.keys()).map((name) => [name, currentFrame.get(name)]))
+  const objects = new Map(
+    Array.from(currentFrame.locals.keys()).map((name) => [
+      name,
+      currentFrame.get(name),
+    ]),
+  )
 
   return Array.from(objects.keys())
     .filter((name) => {
       const object = objects.get(name)
-      return isConsoleLocal(name) || object && autoImportedFromConsole(object, importedFromConsole)
+      return (
+        isConsoleLocal(name) ||
+        (object && autoImportedFromConsole(object, importedFromConsole))
+      )
     })
     .flatMap((name) => fromLocal(name, objects.get(name)!, interpreter))
     .reduce<ElementDefinition[]>((uniques, elem) => {
-      if (!uniques.find(uniqueElement => uniqueElement.data.id === elem.data.id))
+      if (
+        !uniques.find((uniqueElement) => uniqueElement.data.id === elem.data.id)
+      )
         uniques.push(elem)
       return uniques
     }, [])
 }
 
-function autoImportedFromConsole(obj: RuntimeObject, importedFromConsole: Entity[]) {
+function autoImportedFromConsole(
+  obj: RuntimeObject,
+  importedFromConsole: Entity[],
+) {
   return importedFromConsole.includes(obj.module)
 }
 
-function fromLocal(name: string, obj: RuntimeObject, interpreter: Interpreter): ElementDefinition[] {
+function fromLocal(
+  name: string,
+  obj: RuntimeObject,
+  interpreter: Interpreter,
+): ElementDefinition[] {
   return [
-    ...isConsoleLocal(name)
-      ? buildReplElement(obj, name)
-      : [],
+    ...(isConsoleLocal(name) ? buildReplElement(obj, name) : []),
     ...elementFromObject(obj, interpreter),
   ]
 }
@@ -86,7 +98,11 @@ function buildReplElement(obj: RuntimeObject, name: string) {
   ]
 }
 
-function elementFromObject(obj: RuntimeObject, interpreter: Interpreter, alreadyVisited: string[] = []): ElementDefinition[] {
+function elementFromObject(
+  obj: RuntimeObject,
+  interpreter: Interpreter,
+  alreadyVisited: string[] = [],
+): ElementDefinition[] {
   const { id } = obj
   if (alreadyVisited.includes(id)) return []
   return concatOverlappedReferences([
@@ -96,12 +112,17 @@ function elementFromObject(obj: RuntimeObject, interpreter: Interpreter, already
   ])
 }
 
-
-function concatOverlappedReferences(elementDefinitions: ElementDefinition[]): ElementDefinition[] {
+function concatOverlappedReferences(
+  elementDefinitions: ElementDefinition[],
+): ElementDefinition[] {
   const cleanDefinitions: ElementDefinition[] = []
-  elementDefinitions.forEach(elem => {
+  elementDefinitions.forEach((elem) => {
     if (elem.data.source && elem.data.target) {
-      const repeated = cleanDefinitions.find(def => def.data.source === elem.data.source && def.data.target === elem.data.target)
+      const repeated = cleanDefinitions.find(
+        (def) =>
+          def.data.source === elem.data.source &&
+          def.data.target === elem.data.target,
+      )
       if (repeated) {
         repeated.data.id = `${repeated.data.id}_${elem.data.id}`
         repeated.data.label = `${repeated.data.label}, ${elem.data.label}`
@@ -114,7 +135,6 @@ function concatOverlappedReferences(elementDefinitions: ElementDefinition[]): El
   })
   return cleanDefinitions
 }
-
 
 // De acá se obtiene la lista de objetos a dibujar
 function decoration(obj: RuntimeObject, interpreter: Interpreter) {
@@ -133,7 +153,10 @@ function isConsoleLocal(name: string): boolean {
 }
 
 function isLanguageLocal(name: string) {
-  return name.startsWith(WOLLOK_BASE_MODULES) || ['true', 'false', 'null'].includes(name)
+  return (
+    name.startsWith(WOLLOK_BASE_MODULES) ||
+    ['true', 'false', 'null'].includes(name)
+  )
 }
 
 function getType(obj: RuntimeObject, moduleName: string): objectType {
@@ -145,7 +168,8 @@ function getLabel(obj: RuntimeObject, interpreter: Interpreter): string {
   const { innerValue, module } = obj
   if (innerValue === null) return 'null'
   const moduleName = module.fullyQualifiedName
-  if (shouldShortenRepresentation(moduleName)) return showInnerValue(interpreter.send('toString', obj)?.innerValue)
+  if (shouldShortenRepresentation(moduleName))
+    return showInnerValue(interpreter.send('toString', obj)?.innerValue)
   // Otra opción es enviar el mensaje "printString" pero por cuestiones de performance preferí aprovechar el innerValue
   if (moduleName === STRING_MODULE) return `"${showInnerValue(innerValue)}"`
   if (shouldShowInnerValue(moduleName)) return showInnerValue(innerValue)
@@ -161,15 +185,29 @@ function getFontSize(text: string) {
 
 function shouldShortenRepresentation(moduleName: string) {
   // Por ahora el Closure está viniendo como `wollok.lang.Closure#undefined` supongo que porque está en el contexto de un REPL
-  return ['wollok.lang.Date', 'wollok.lang.Pair', 'wollok.lang.Range', 'wollok.lang.Dictionary'].includes(moduleName) || moduleName.startsWith('wollok.lang.Closure')
+  return (
+    [
+      'wollok.lang.Date',
+      'wollok.lang.Pair',
+      'wollok.lang.Range',
+      'wollok.lang.Dictionary',
+    ].includes(moduleName) || moduleName.startsWith('wollok.lang.Closure')
+  )
 }
 
 function shouldShowInnerValue(moduleName: string) {
-  return ['wollok.lang.String', 'wollok.lang.Number', 'wollok.lang.Boolean'].includes(moduleName)
+  return [
+    'wollok.lang.String',
+    'wollok.lang.Number',
+    'wollok.lang.Boolean',
+  ].includes(moduleName)
 }
 
 function shouldIterateChildren(moduleName: string): boolean {
-  return !shouldShortenRepresentation(moduleName) && !shouldShowInnerValue(moduleName)
+  return (
+    !shouldShortenRepresentation(moduleName) &&
+    !shouldShowInnerValue(moduleName)
+  )
 }
 
 function showInnerValue(innerValue: InnerValue | undefined): string {
@@ -180,7 +218,9 @@ function getLocalKeys(obj: RuntimeObject) {
   const { innerValue, module } = obj
   if (innerValue === null) return []
   const moduleName: string = module.fullyQualifiedName
-  return shouldIterateChildren(moduleName) ? [...obj.locals.keys()].filter(key => key !== SELF) : []
+  return shouldIterateChildren(moduleName)
+    ? [...obj.locals.keys()].filter((key) => key !== SELF)
+    : []
 }
 
 function buildReference(obj: RuntimeObject, label: string) {
@@ -198,35 +238,42 @@ function buildReference(obj: RuntimeObject, label: string) {
   }
 }
 
-function getCollections(obj: RuntimeObject, interpreter: Interpreter, alreadyVisited: string[]) {
+function getCollections(
+  obj: RuntimeObject,
+  interpreter: Interpreter,
+  alreadyVisited: string[],
+) {
   const { id } = obj
-  return (obj.innerCollection || [])
-    .flatMap((item, i) => {
-      const result = [
-        {
-          data: {
-            id: `${id}_${item.id}`,
-            source: id,
-            target: item.id,
-            label: isList(obj.module.name) ? i.toString() : '',
-            style: 'dotted',
-            width: 1,
-          },
+  return (obj.innerCollection || []).flatMap((item, i) => {
+    const result = [
+      {
+        data: {
+          id: `${id}_${item.id}`,
+          source: id,
+          target: item.id,
+          label: isList(obj.module.name) ? i.toString() : '',
+          style: 'dotted',
+          width: 1,
         },
-        ...elementFromObject(item, interpreter, [...alreadyVisited, id]),
-      ]
-      alreadyVisited.push(item.id)
-      return result
-    })
+      },
+      ...elementFromObject(item, interpreter, [...alreadyVisited, id]),
+    ]
+    alreadyVisited.push(item.id)
+    return result
+  })
 }
 
 function isList(moduleName: string | undefined) {
   return moduleName === LIST_MODULE
 }
 
-function getInstanceVariables(obj: RuntimeObject, interpreter: Interpreter, alreadyVisited: string[]) {
+function getInstanceVariables(
+  obj: RuntimeObject,
+  interpreter: Interpreter,
+  alreadyVisited: string[],
+) {
   const { id } = obj
-  return getLocalKeys(obj).flatMap(name => [
+  return getLocalKeys(obj).flatMap((name) => [
     buildReference(obj, name),
     ...elementFromObject(obj.get(name)!, interpreter, [...alreadyVisited, id]),
   ])

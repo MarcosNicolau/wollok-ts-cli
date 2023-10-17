@@ -1,15 +1,23 @@
 import { should } from 'chai'
 import { join } from 'path'
 import { Interpreter } from 'wollok-ts/dist/interpreter/interpreter'
-import { initializeInterpreter, interprete, REPL, replNode } from '../src/commands/repl'
-import { failureDescription, successDescription, valueDescription } from '../src/utils'
+import {
+  initializeInterpreter,
+  interprete,
+  REPL,
+  replNode,
+} from '../src/commands/repl'
+import {
+  failureDescription,
+  successDescription,
+  valueDescription,
+} from '../src/utils'
 
 const projectPath = join('examples', 'repl-examples')
 
 should()
 
 describe('REPL', () => {
-
   const options = {
     project: projectPath,
     skipValidations: false,
@@ -18,12 +26,11 @@ describe('REPL', () => {
   }
   let interpreter: Interpreter
 
-  beforeEach(async () =>
-    interpreter = await initializeInterpreter(undefined, options)
+  beforeEach(
+    async () => (interpreter = await initializeInterpreter(undefined, options)),
   )
 
   describe('should accept', () => {
-
     it('value expressions', () => {
       const result = interprete(interpreter, '1 + 2')
       result.should.be.equal(successDescription('3'))
@@ -46,12 +53,15 @@ describe('REPL', () => {
 
     it('failure expressions', () => {
       const result = interprete(interpreter, 'fakeReference')
-      result.should.be.equal(failureDescription(`Unknown reference ${valueDescription('fakeReference')}`))
+      result.should.be.equal(
+        failureDescription(
+          `Unknown reference ${valueDescription('fakeReference')}`,
+        ),
+      )
     })
   })
 
   describe('should print result', () => {
-
     it('for reference to wko', () => {
       const result = interprete(interpreter, 'assert')
       result.should.be.equal(successDescription('assert'))
@@ -99,17 +109,19 @@ describe('REPL', () => {
   })
 
   describe('with file', () => {
-
     const fileName = join(projectPath, 'aves.wlk')
 
-    beforeEach(async () =>
-      interpreter = await initializeInterpreter(fileName, options)
+    beforeEach(
+      async () =>
+        (interpreter = await initializeInterpreter(fileName, options)),
     )
 
     it('should auto import the file and imported entities', () => {
       const replPackage = replNode(interpreter.evaluation.environment)
       replPackage.fullyQualifiedName.should.be.equal('aves')
-      replPackage.imports[0].entity.target!.fullyQualifiedName.should.be.equal('otros.comidas')
+      replPackage.imports[0].entity.target!.fullyQualifiedName.should.be.equal(
+        'otros.comidas',
+      )
     })
 
     it('file definitions should be accessible', () => {
@@ -124,18 +136,26 @@ describe('REPL', () => {
 
     it('not imported definitions should not be accessible', () => {
       const result = interprete(interpreter, 'ash')
-      result.should.be.equal(failureDescription(`Unknown reference ${valueDescription('ash')}`))
+      result.should.be.equal(
+        failureDescription(`Unknown reference ${valueDescription('ash')}`),
+      )
     })
 
     it('after generic import, definitions should be accessible', () => {
-      const result = interprete(interpreter, 'import otros.personas.entrenadores.*')
+      const result = interprete(
+        interpreter,
+        'import otros.personas.entrenadores.*',
+      )
       result.should.be.equal(successDescription(''))
       const result2 = interprete(interpreter, 'ash')
       result2.should.be.equal(successDescription('ash'))
     })
 
     it('after entity import, it should be accessible', () => {
-      const result = interprete(interpreter, 'import otros.personas.entrenadores.ash')
+      const result = interprete(
+        interpreter,
+        'import otros.personas.entrenadores.ash',
+      )
       result.should.be.equal(successDescription(''))
       const result2 = interprete(interpreter, 'ash')
       result2.should.be.equal(successDescription('ash'))
@@ -146,23 +166,29 @@ describe('REPL', () => {
       const stackTrace = result.split('\n')
       stackTrace.length.should.equal(4)
       consoleCharacters(stackTrace[0]).should.be.equal('✗ Evaluation Error!')
-      consoleCharacters(stackTrace[1]).should.be.equal('wollok.lang.EvaluationError wrapping TypeScript TypeError: Expected an instance of wollok.lang.Number but got a wollok.lang.String instead')
-      consoleCharacters(stackTrace[2]).should.be.equal('at aves.pepitaRota.vola(distancia) [aves.wlk:22]')
+      consoleCharacters(stackTrace[1]).should.be.equal(
+        'wollok.lang.EvaluationError wrapping TypeScript TypeError: Expected an instance of wollok.lang.Number but got a wollok.lang.String instead',
+      )
+      consoleCharacters(stackTrace[2]).should.be.equal(
+        'at aves.pepitaRota.vola(distancia) [aves.wlk:22]',
+      )
       consoleCharacters(stackTrace[3]).should.be.equal('')
     })
 
     describe('in a sub-folder', () => {
-
       const fileName = join(projectPath, 'otros', 'comidas.wlk')
 
-      beforeEach(async () =>
-        interpreter = await initializeInterpreter(fileName, options)
+      beforeEach(
+        async () =>
+          (interpreter = await initializeInterpreter(fileName, options)),
       )
 
       it('should auto import the file and relative imported entities', () => {
         const replPackage = replNode(interpreter.evaluation.environment)
         replPackage.fullyQualifiedName.should.be.equal('otros.comidas')
-        replPackage.imports[0].entity.target!.fullyQualifiedName.should.be.equal('otros.personas.entrenadores')
+        replPackage.imports[0].entity.target!.fullyQualifiedName.should.be.equal(
+          'otros.personas.entrenadores',
+        )
       })
 
       it('file definitions should be accessible', () => {
@@ -174,13 +200,10 @@ describe('REPL', () => {
         const result = interprete(interpreter, 'ash')
         result.should.be.equal(successDescription('ash'))
       })
-
     })
-
   })
 
   describe('without file', () => {
-
     it('should not auto import any file', () => {
       const replPackage = replNode(interpreter.evaluation.environment)
       replPackage.fullyQualifiedName.should.be.equal(REPL)
@@ -197,11 +220,12 @@ describe('REPL', () => {
       const stackTrace = result.split('\n')
       stackTrace.length.should.equal(4)
       consoleCharacters(stackTrace[0]).should.be.equal('✗ Evaluation Error!')
-      consoleCharacters(stackTrace[1]).should.be.equal('wollok.lib.AssertionException: Expected <2> but found <1>')
+      consoleCharacters(stackTrace[1]).should.be.equal(
+        'wollok.lib.AssertionException: Expected <2> but found <1>',
+      )
       consoleCharacters(stackTrace[2]).should.be.equal('')
       consoleCharacters(stackTrace[3]).should.be.equal('')
     })
-
   })
 })
 

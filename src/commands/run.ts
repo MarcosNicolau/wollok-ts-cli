@@ -6,11 +6,35 @@ import http from 'http'
 import logger from 'loglevel'
 import path from 'path'
 import { Server } from 'socket.io'
-import { link, Name, parse, RuntimeObject, validate, WollokException } from 'wollok-ts'
+import {
+  link,
+  Name,
+  parse,
+  RuntimeObject,
+  validate,
+  WollokException,
+} from 'wollok-ts'
 import interpret, { Interpreter } from 'wollok-ts/dist/interpreter/interpreter'
 import natives from 'wollok-ts/dist/wre/wre.natives'
-import { buildEnvironmentForProject, failureDescription, isImageFile, problemDescription, publicPath, readPackageProperties, successDescription, valueDescription } from '../utils'
-import { buildKeyPressEvent, canvasResolution, Image, queueEvent, visualState, VisualState, wKeyCode } from './extrasGame'
+import {
+  buildEnvironmentForProject,
+  failureDescription,
+  isImageFile,
+  problemDescription,
+  publicPath,
+  readPackageProperties,
+  successDescription,
+  valueDescription,
+} from '../utils'
+import {
+  buildKeyPressEvent,
+  canvasResolution,
+  Image,
+  queueEvent,
+  visualState,
+  VisualState,
+  wKeyCode,
+} from './extrasGame'
 
 const { time, timeEnd } = console
 
@@ -26,8 +50,13 @@ let projectPath: string
 let assetsPath: string | undefined
 let timmer = 0
 
-export default async function (programFQN: Name, { project, assets, skipValidations, port }: Options): Promise<void> {
-  logger.info(`Running ${valueDescription(programFQN)} on ${valueDescription(project)}`)
+export default async function (
+  programFQN: Name,
+  { project, assets, skipValidations, port }: Options,
+): Promise<void> {
+  logger.info(
+    `Running ${valueDescription(programFQN)} on ${valueDescription(project)}`,
+  )
 
   projectPath = project
   const packageProperties = readPackageProperties(project)
@@ -35,13 +64,22 @@ export default async function (programFQN: Name, { project, assets, skipValidati
   assetsPath = assetsFolder ? path.join(project, assetsFolder) : undefined
 
   let environment = await buildEnvironmentForProject(project)
-  environment = link([parse.File('draw').tryParse('object drawer{ method apply() native }')], environment)
+  environment = link(
+    [parse.File('draw').tryParse('object drawer{ method apply() native }')],
+    environment,
+  )
 
   if (!skipValidations) {
     const problems = validate(environment)
-    problems.forEach(problem => logger.info(problemDescription(problem)))
-    if (!problems.length) logger.info(successDescription('No problems found building the environment!'))
-    else if (problems.some(_ => _.level === 'error')) return logger.error(failureDescription('Aborting run due to validation errors!'))
+    problems.forEach((problem) => logger.info(problemDescription(problem)))
+    if (!problems.length)
+      logger.info(
+        successDescription('No problems found building the environment!'),
+      )
+    else if (problems.some((_) => _.level === 'error'))
+      return logger.error(
+        failureDescription('Aborting run due to validation errors!'),
+      )
   }
 
   logger.info(`Running ${valueDescription(programFQN)}...\n`)
@@ -57,23 +95,28 @@ export default async function (programFQN: Name, { project, assets, skipValidati
           *apply() {
             try {
               const game = interp?.object('wollok.game.game')
-              const background = game.get('boardGround') ? game.get('boardGround')?.innerString : 'default'
+              const background = game.get('boardGround')
+                ? game.get('boardGround')?.innerString
+                : 'default'
               const visuals = getVisuals(game)
               io.emit('background', background)
               io.emit('visuals', visuals)
 
               const gameSounds = game.get('sounds')?.innerCollection ?? []
-              const mappedSounds = gameSounds.map(sound =>
-                [
-                  sound.id,
-                  sound.get('file')!.innerString!,
-                  sound.get('status')!.innerString!,
-                  sound.get('volume')!.innerNumber!,
-                  sound.get('loop')!.innerBoolean!,
-                ])
-              io.emit('updateSound', { path: folderSound(), soundInstances: mappedSounds })
+              const mappedSounds = gameSounds.map((sound) => [
+                sound.id,
+                sound.get('file')!.innerString!,
+                sound.get('status')!.innerString!,
+                sound.get('volume')!.innerNumber!,
+                sound.get('loop')!.innerBoolean!,
+              ])
+              io.emit('updateSound', {
+                path: folderSound(),
+                soundInstances: mappedSounds,
+              })
             } catch (e: any) {
-              if (e instanceof WollokException) logger.error(failureDescription(e.message))
+              if (e instanceof WollokException)
+                logger.error(failureDescription(e.message))
               interp.send('stop', game)
             }
           },
@@ -85,13 +128,21 @@ export default async function (programFQN: Name, { project, assets, skipValidati
 
     const game = interp?.object('wollok.game.game')
     const drawer = interp.object('draw.drawer')
-    interp.send('onTick', game, interp.reify(17), interp.reify('renderizar'), drawer)
+    interp.send(
+      'onTick',
+      game,
+      interp.reify(17),
+      interp.reify('renderizar'),
+      drawer,
+    )
 
     interp.run(programFQN)
 
     if (debug) timeEnd(successDescription('Run finalized successfully'))
   } catch (error: any) {
-    logger.error(failureDescription('Uh-oh... An error occurred during the run!', error))
+    logger.error(
+      failureDescription('Uh-oh... An error occurred during the run!', error),
+    )
   }
 
   const sizeCanvas = canvasResolution(interp)
@@ -103,19 +154,31 @@ export default async function (programFQN: Name, { project, assets, skipValidati
   app.use(
     cors({ allowedHeaders: '*' }),
     express.static(publicPath('game'), { maxAge: '1d' }),
-    express.static(assetsPath ?? project, { maxAge: '1d' }))
+    express.static(assetsPath ?? project, { maxAge: '1d' }),
+  )
   server.listen(parseInt(port), 'localhost')
 
-  logger.info(successDescription('Game available at: ' + bold(`http://localhost:${port}`)))
+  logger.info(
+    successDescription(
+      'Game available at: ' + bold(`http://localhost:${port}`),
+    ),
+  )
 
-  io.on('connection', socket => {
+  io.on('connection', (socket) => {
     logger.info(successDescription('Running game!'))
-    socket.on('disconnect', () => { logger.info(successDescription('Game finished')) })
-    socket.on('keyPressed', key => {
-      queueEvent(interp, buildKeyPressEvent(interp, wKeyCode(key.key, key.keyCode)), buildKeyPressEvent(interp, 'ANY'))
+    socket.on('disconnect', () => {
+      logger.info(successDescription('Game finished'))
+    })
+    socket.on('keyPressed', (key) => {
+      queueEvent(
+        interp,
+        buildKeyPressEvent(interp, wKeyCode(key.key, key.keyCode)),
+        buildKeyPressEvent(interp, 'ANY'),
+      )
     })
 
-    if (!assetsPath) logger.warn(failureDescription('Folder for assets not found!'))
+    if (!assetsPath)
+      logger.warn(failureDescription('Folder for assets not found!'))
     socket.emit('images', getImages())
     socket.emit('sizeCanvasInic', [sizeCanvas.width, sizeCanvas.height])
 
@@ -141,14 +204,19 @@ export default async function (programFQN: Name, { project, assets, skipValidati
 function getImages() {
   const images: Image[] = []
   const baseFolder = assetsPath ?? projectPath
-  const loadImagesIn = (basePath: string) => fs.readdirSync(basePath, { withFileTypes: true })
-    .forEach((file: Dirent) => {
-      if (file.isDirectory()) loadImagesIn(path.join(basePath, file.name))
-      else if (isImageFile(file)) {
-        const fileName = path.relative(baseFolder, path.join(basePath, file.name))
-        images.push({ name: fileName, url: fileName })
-      }
-    })
+  const loadImagesIn = (basePath: string) =>
+    fs
+      .readdirSync(basePath, { withFileTypes: true })
+      .forEach((file: Dirent) => {
+        if (file.isDirectory()) loadImagesIn(path.join(basePath, file.name))
+        else if (isImageFile(file)) {
+          const fileName = path.relative(
+            baseFolder,
+            path.join(basePath, file.name),
+          )
+          images.push({ name: fileName, url: fileName })
+        }
+      })
   loadImagesIn(baseFolder)
   return images
 }
@@ -160,9 +228,9 @@ function getVisuals(game: RuntimeObject) {
     const messageTime = Number(visual.get('messageTime')?.innerValue)
 
     if (message != undefined && messageTime > timmer) {
-      visuals.push({ 'image': image, 'position': position, 'message': message })
+      visuals.push({ image: image, position: position, message: message })
     } else {
-      visuals.push({ 'image': image, 'position': position, 'message': undefined })
+      visuals.push({ image: image, position: position, message: undefined })
     }
   }
   return visuals
@@ -170,7 +238,9 @@ function getVisuals(game: RuntimeObject) {
 
 function folderSound() {
   const pathDirname = path.dirname(projectPath)
-  const folder = fs.readdirSync(pathDirname).includes('sounds') ? 'sounds' : assetsPath
+  const folder = fs.readdirSync(pathDirname).includes('sounds')
+    ? 'sounds'
+    : assetsPath
 
   return path.join(path.dirname(projectPath), '/' + folder + '/')
 }
