@@ -18,7 +18,9 @@
     "test:unit": "mocha --parallel -r ts-node/register/transpile-only test/**/*.test.ts",
     "build": "shx rm -rf build && shx mkdir ./build && shx cp -r ./public ./build/public && tsc -p ./tsconfig.build.json",
     "watch": "npm run build -- -w",
-    "pack": "pkg ."
+    "pack": "pkg .",
+    "pack:macos-arm64": "pkg . --output ./dist/node16-macos-arm64 --targets node16-macos-arm64",
+    "pack:all": "npm run pack && npm run pack:macos-arm64"
   },
   "bin": {
     "wollok": "./build/index.js"
@@ -28,7 +30,6 @@
     "targets": [
       "node16-linux-x64",
       "node16-macos-x64",
-      "node16-macos-arm64",
       "node16-win-x64"
     ],
     "assets": [
