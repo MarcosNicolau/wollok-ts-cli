@@ -2,11 +2,13 @@ var wko
 var backgroundImage
 var messageError
 var widthGame = 0
+var heightGame = 0
 const sizeFactor = 50
 var cellPixelSize
 var images = new Array()
 var visuals = new Array()
 var sounds = new Map()
+var interpreter
 
 function preload() {
   loadAllImages()
@@ -14,19 +16,25 @@ function preload() {
   defaultBackground = loadImage('./background.jpg')
   socket.on('sizeCanvasInic', (size) => {
     widthGame = size[0]
+    heightGame = size[1]
+    resizeCanvas(widthGame, heightGame)
   })
   socket.on('cellPixelSize', (size) => {
     cellPixelSize = size
   })
+  socket.on('interpreter', () => {
+    interpreter = interpreter
+  })
 }
 
 function setup() {
-  createCanvas(windowWidth - 20, windowHeight - 20)
+  canvas = createCanvas(widthGame, heightGame)
   socket.on('updateSound', (data) => {
     updateSound(data.path, data.soundInstances)
   })
   loadBackground()
   loadVisuals()
+  window.setInterval(checkCollisions, 16)
 }
 
 function draw() {
@@ -34,10 +42,6 @@ function draw() {
   if (backgroundImage) background(backgroundImage)
   drawVisuals()
   checkError()
-}
-
-function windowResized() {
-  resizeCanvas(windowWidth - 20, windowHeight - 20)
 }
 
 function checkError() {
@@ -85,8 +89,8 @@ function drawVisuals() {
   if (visuals) {
     for (i = 0; i < visuals.length; i++) {
       var positionX =
-        visuals[i].position.x * cellPixelSize * (windowWidth / widthGame)
-      var y = windowHeight - 20 - visuals[i].position.y * cellPixelSize
+        visuals[i].position.x * cellPixelSize
+      var y = heightGame + 20 - visuals[i].position.y * cellPixelSize
       var img = images.find((img) => img.name == visuals[i].image)
       var positionY = img ? y - img.url.height : y - wko.height
       if (img) image(img.url, positionX, positionY)
@@ -268,5 +272,70 @@ class GameSound {
 
   stopSound() {
     this.soundFile.stop()
+  }
+}
+
+
+
+function getImgPosAndDimensions(visual) {
+    var positionX = visual.position.x * cellPixelSize
+    var img = images.find((img) => img.name == visual.image)
+    var height = img?.url.height || wko.height
+    var width = img?.url.width || wko.width
+    var y = heightGame + 20 - visual.position.y * cellPixelSize
+    var positionY = y - height
+
+    return {
+      positionX,
+      positionY,
+      height,
+      width
+    }
+}
+
+const isIntersecting = (Ax, Ay, Aw, Ah, Bx,  By,  Bw,  Bh) => (
+    Bx + Bw > Ax &&
+    By + Bh > Ay &&
+    Ax + Aw > Bx &&
+    Ay + Ah > By
+)
+
+
+const linearBound = (number, leftBound, rightBound) =>
+	number >= leftBound && number <= rightBound;
+
+const rectangularCollision = (bound1, bound2) => {
+  const checkBound = (axis) =>
+			linearBound(
+				bound1.center[axis],
+				bound2.center[axis] - bound2.displacement[axis],
+				bound2.center[axis] + bound2.displacement[axis],
+				bound2.open
+			) ||
+			linearBound(
+				bound1.center[axis],
+				bound2.center[axis] - bound2.displacement[axis],
+				bound2.center[axis] + bound2.displacement[axis],
+				bound2.open
+			);
+
+		return checkBound("x") && checkBound("y");
+}
+
+function checkCollisions() {
+  if (visuals) {
+    const visualsToChecked = [...visuals]
+    visuals.forEach((visual_1, index) => {
+      const { height: height_1, width: width_1, positionX: positionX_1, positionY: positionY_1 } = getImgPosAndDimensions(visual_1)
+      visualsToChecked.forEach(visual_2 => {
+        if(visual_1.image === visual_2.image) return;
+        const { height:  height_2, width: width_2, positionX: positionX_2, positionY: positionY_2 } = getImgPosAndDimensions(visual_2)
+        const hit = isIntersecting(positionX_1, positionY_1, width_1, height_1, positionX_2, positionY_2, width_2, height_2)
+        if(hit) {
+          socket.emit("invoke collision", { visual1Id: visual_1.id, visual2Id: visual_2.id })
+        }
+        visualsToChecked.splice(index, 1)
+      })
+    })
   }
 }

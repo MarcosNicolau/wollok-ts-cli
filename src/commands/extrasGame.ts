@@ -10,8 +10,8 @@ export interface CanvasResolution {
 export function canvasResolution(interpreter: Interpreter): CanvasResolution {
   const game = interpreter.object('wollok.game.game')
   const cellPixelSize = game.get('cellSize')!.innerNumber!
-  const width = round(game.get('width')!.innerNumber!) * cellPixelSize
-  const height = round(game.get('height')!.innerNumber!) * cellPixelSize
+  const width = round(game.get('width')!.innerNumber!)
+  const height = round(game.get('height')!.innerNumber!)
   return { width, height }
 }
 export interface VisualState {
@@ -19,6 +19,7 @@ export interface VisualState {
   position: Position
   text?: string
   textColor?: string
+  id?: string
 }
 export interface Position {
   x: number
@@ -28,14 +29,15 @@ export interface Image {
   name: string
   url: string
 }
-function invokeMethod(
+export function invokeMethod(
   interpreter: Interpreter,
   visual: RuntimeObject,
   method: string,
+  ...args: RuntimeObject[]
 ) {
   const lookedUpMethod = visual.module.lookupMethod(method, 0)
   return (
-    lookedUpMethod && interpreter.invoke(lookedUpMethod, visual)!.innerString
+    lookedUpMethod && interpreter.invoke(lookedUpMethod, visual, ...args)?.innerString
   )
 }
 export function visualState(
@@ -49,7 +51,9 @@ export function visualState(
   const y = roundedPosition.get('y')!.innerNumber!
   const text = invokeMethod(interpreter, visual, 'text')
   const textColor = invokeMethod(interpreter, visual, 'textColor')
-  return { image, position: { x, y }, text, textColor }
+  const id = invokeMethod(interpreter, visual, 'id')
+
+  return { image, position: { x, y }, text, textColor, id }
 }
 export function queueEvent(
   interpreter: Interpreter,

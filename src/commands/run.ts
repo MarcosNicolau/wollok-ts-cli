@@ -34,6 +34,7 @@ import {
   visualState,
   VisualState,
   wKeyCode,
+  invokeMethod
 } from './extrasGame'
 
 const { time, timeEnd } = console
@@ -177,10 +178,27 @@ export default async function (
       )
     })
 
+    socket.on("invoke collision", ({visual1Id,  visual2Id})  => {
+        const game = interp?.object('wollok.game.game')
+        if(!game)
+          return;
+        const visuals =  game.get('visuals')?.innerCollection || []
+        const visual1 = visuals.find(visual => invokeMethod(interp, visual, 'id') === visual1Id)
+        const visual2 = visuals.find(visual => invokeMethod(interp, visual, 'id') === visual2Id)
+
+        if(visual1 && visual2) {
+          const lookedUpMethod_1 = visual1.module.lookupMethod("onCollideDo", 1)
+          const lookedUpMethod_2 = visual2.module.lookupMethod("onCollideDo", 1)
+          lookedUpMethod_2 && interp.invoke(lookedUpMethod_2, visual2, visual1)
+          lookedUpMethod_1 && interp.invoke(lookedUpMethod_1, visual1, visual2)
+        }
+    })
+
     if (!assetsPath)
       logger.warn(failureDescription('Folder for assets not found!'))
     socket.emit('images', getImages())
     socket.emit('sizeCanvasInic', [sizeCanvas.width, sizeCanvas.height])
+    socket.emit('interpreter', interp)
 
     const id = setInterval(() => {
       const game = interp.object('wollok.game.game')
