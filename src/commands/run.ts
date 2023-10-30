@@ -187,10 +187,8 @@ export default async function (
         const visual2 = visuals.find(visual => invokeMethod(interp, visual, 'id') === visual2Id)
 
         if(visual1 && visual2) {
-          const lookedUpMethod_1 = visual1.module.lookupMethod("onCollideDo", 1)
-          const lookedUpMethod_2 = visual2.module.lookupMethod("onCollideDo", 1)
-          lookedUpMethod_2 && interp.invoke(lookedUpMethod_2, visual2, visual1)
-          lookedUpMethod_1 && interp.invoke(lookedUpMethod_1, visual1, visual2)
+          const lookedUpMethod = visual1.module.lookupMethod("onCollideDo", 1)
+          lookedUpMethod && interp.invoke(lookedUpMethod, visual1, visual2)
         }
     })
 

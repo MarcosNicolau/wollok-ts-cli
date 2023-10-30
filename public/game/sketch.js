@@ -324,17 +324,15 @@ const rectangularCollision = (bound1, bound2) => {
 
 function checkCollisions() {
   if (visuals) {
-    const visualsToChecked = [...visuals]
     visuals.forEach((visual_1, index) => {
       const { height: height_1, width: width_1, positionX: positionX_1, positionY: positionY_1 } = getImgPosAndDimensions(visual_1)
-      visualsToChecked.forEach(visual_2 => {
+      visuals.forEach(visual_2 => {
         if(visual_1.image === visual_2.image) return;
         const { height:  height_2, width: width_2, positionX: positionX_2, positionY: positionY_2 } = getImgPosAndDimensions(visual_2)
         const hit = isIntersecting(positionX_1, positionY_1, width_1, height_1, positionX_2, positionY_2, width_2, height_2)
         if(hit) {
           socket.emit("invoke collision", { visual1Id: visual_1.id, visual2Id: visual_2.id })
         }
-        visualsToChecked.splice(index, 1)
       })
     })
   }
